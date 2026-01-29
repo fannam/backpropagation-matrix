@@ -4,22 +4,21 @@
 #define UNARY_OPS_HPP
 
 #include "core/Tensor.hpp"
+#include<stdexcept>
 
 std::shared_ptr<Tensor> negate(std::shared_ptr<Tensor> a); // phép lấy số đối
 
 std::shared_ptr<Tensor> exp_op(std::shared_ptr<Tensor> a);
 
-std::shared_ptr<Tensor> ln(std::shared_ptr<Tensor> a);
+std::shared_ptr<Tensor> log_op(std::shared_ptr<Tensor> a);
 
 std::shared_ptr<Tensor> scalar_div_tensor(double scalar, std::shared_ptr<Tensor> a);
-
-std::shared_ptr<Tensor> tensor_div_scalar(std::shared_ptr<Tensor> a, double scalar);
 
 std::shared_ptr<Tensor> reciprocal(std::shared_ptr<Tensor> a);
 
 std::shared_ptr<Tensor> tensor_add_scalar(std::shared_ptr<Tensor> a, double scalar);
 
-std::shared_ptr<Tensor> tensor_sub_scalar(std::shared_ptr<Tensor> a, double scalar);
+std::shared_ptr<Tensor> tensor_mul_scalar(std::shared_ptr<Tensor> a, double scalar);
 
 inline std::shared_ptr<Tensor> operator - (std::shared_ptr<Tensor> a) {
     return negate(a);
@@ -30,7 +29,8 @@ inline std::shared_ptr<Tensor> operator / (double scalar, std::shared_ptr<Tensor
 }
 
 inline std::shared_ptr<Tensor> operator / (std::shared_ptr<Tensor> a, double scalar) {
-    return tensor_div_scalar(a, scalar);
+    if(scalar == 0) throw std::runtime_error("Loi chia cho 0!");
+    return tensor_mul_scalar(a, 1.0 / scalar);
 }
 
 inline std::shared_ptr<Tensor> operator + (double scalar, std::shared_ptr<Tensor> a) {
@@ -49,6 +49,13 @@ inline std::shared_ptr<Tensor> operator - (std::shared_ptr<Tensor> a, double sca
     return tensor_add_scalar(a, -scalar);
 }
 
+inline std::shared_ptr<Tensor> operator * (double scalar, std::shared_ptr<Tensor> a) {
+    return tensor_mul_scalar(a, scalar);
+}
+
+inline std::shared_ptr<Tensor> operator * (std::shared_ptr<Tensor> a, double scalar) {
+    return tensor_mul_scalar(a, scalar);
+}
 
 
 #endif
