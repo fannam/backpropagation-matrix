@@ -15,15 +15,17 @@ public:
 
     std::vector<std::shared_ptr<Tensor>>prev;
     std::function<void()> _backward;
-
+    
     //Constructor
     Tensor(int r, int c, std::vector<std::shared_ptr<Tensor>> parents = {}, std::string lbl="");
 
     static std::shared_ptr<Tensor> create(int r, int c, std::vector<std::shared_ptr<Tensor>>parents = {}, std::string lbl = ""); 
+    std::shared_ptr<Tensor> T();
     double &at(int i, int j);
     double &grad_at(int i, int j);
 
     void backward();
+    
 };
 
 #endif
