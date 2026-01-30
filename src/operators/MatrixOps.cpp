@@ -9,7 +9,7 @@ std::shared_ptr<Tensor> Tensor::T() {
 }
 
 std::shared_ptr<Tensor> transpose(std::shared_ptr<Tensor> a) {
-    auto out = Tensor::create(a->rows, a->cols, {a}, "T");
+    auto out = Tensor::create(a->cols, a->rows, {a}, "T");
 
     for(size_t i = 0; i < a->rows; ++i){
         for(size_t j = 0; j < a->cols; ++j){
@@ -20,10 +20,12 @@ std::shared_ptr<Tensor> transpose(std::shared_ptr<Tensor> a) {
     out->_backward = [a, out]() {
         for(size_t i = 0; i < a->rows; ++i){
             for(size_t j = 0; j < a->cols; ++j){
-                out->grad_at(j, i) += a->grad_at(i, j);
+                a->grad_at(i, j) += out->grad_at(j, i);
             }
         }
     };
+
+    return out;
 }
 
 std::shared_ptr<Tensor> matmul(std::shared_ptr<Tensor> a, std::shared_ptr<Tensor> b) {
