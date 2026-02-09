@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "core/Tensor.hpp"
+#include "activations/Activations.hpp"
 #include "operators/BinaryOps.hpp"
 #include "operators/MatrixOps.hpp"
 #include "operators/UnaryOps.hpp"
@@ -32,14 +33,15 @@ bool close_enough(double a, double b, double eps = 1e-9) {
 bool expect_vector_close(const std::vector<double>& actual,
                          const std::vector<double>& expected,
                          const std::string& label,
-                         std::string& err) {
+                         std::string& err,
+                         double eps = 1e-9) {
     if (actual.size() != expected.size()) {
         err = label + ": size mismatch (" + std::to_string(actual.size()) + " vs " +
               std::to_string(expected.size()) + ")";
         return false;
     }
     for (long unsigned int i = 0; i < actual.size(); ++i) {
-        if (!close_enough(actual[i], expected[i])) {
+        if (!close_enough(actual[i], expected[i], eps)) {
             err = label + ": index " + std::to_string(i) + " got " + std::to_string(actual[i]) +
                   " expected " + std::to_string(expected[i]);
             return false;
@@ -202,6 +204,167 @@ bool test_exp_log_chain() {
     return true;
 }
 
+bool test_relu_activation() {
+    auto a = make_tensor(1, 3, {-1.0, 0.0, 2.0});
+    auto c = relu(a);
+
+    std::cout << "\n[relu]\n";
+    print_vector(a->data, "a", 1, 3);
+    print_vector(c->data, "relu(a)", 1, 3);
+
+    std::string err;
+    if (!expect_vector_close(c->data, {0.0, 0.0, 2.0}, "relu data", err)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+
+    c->backward();
+    print_vector(a->grad, "grad a", 1, 3);
+    if (!expect_vector_close(a->grad, {0.0, 0.0, 1.0}, "relu grad", err)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+    return true;
+}
+
+bool test_leaky_relu_activation() {
+    auto a = make_tensor(1, 3, {-2.0, 0.0, 3.0});
+    auto c = leaky_relu(a, 0.1f);
+
+    std::cout << "\n[leaky_relu]\n";
+    print_vector(a->data, "a", 1, 3);
+    print_vector(c->data, "leaky_relu(a)", 1, 3);
+
+    std::string err;
+    if (!expect_vector_close(c->data, {-0.2, 0.0, 3.0}, "leaky_relu data", err, 1e-6)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+
+    c->backward();
+    print_vector(a->grad, "grad a", 1, 3);
+    if (!expect_vector_close(a->grad, {0.1, 0.1, 1.0}, "leaky_relu grad", err, 1e-6)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+    return true;
+}
+
+bool test_silu_activation() {
+    auto a = make_tensor(1, 2, {0.0, 1.0});
+    auto c = silu(a);
+
+    std::cout << "\n[silu]\n";
+    print_vector(a->data, "a", 1, 2);
+    print_vector(c->data, "silu(a)", 1, 2);
+
+    std::string err;
+    if (!expect_vector_close(c->data, {0.0, 0.7310585786300049}, "silu data", err, 1e-6)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+
+    c->backward();
+    print_vector(a->grad, "grad a", 1, 2);
+    if (!expect_vector_close(a->grad, {0.5, 0.9276705118714867}, "silu grad", err, 1e-6)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+    return true;
+}
+
+bool test_gelu_exact_activation() {
+    auto a = make_tensor(1, 2, {0.0, 1.0});
+    auto c = gelu(a, "none");
+
+    std::cout << "\n[gelu_exact]\n";
+    print_vector(a->data, "a", 1, 2);
+    print_vector(c->data, "gelu(a, none)", 1, 2);
+
+    std::string err;
+    if (!expect_vector_close(c->data, {0.0, 0.8413447460685429}, "gelu exact data", err, 1e-5)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+
+    c->backward();
+    print_vector(a->grad, "grad a", 1, 2);
+    if (!expect_vector_close(a->grad, {0.5, 1.0833154705876864}, "gelu exact grad", err, 1e-5)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+    return true;
+}
+
+bool test_gelu_tanh_activation() {
+    auto a = make_tensor(1, 2, {0.0, 1.0});
+    auto c = gelu(a, "tanh");
+
+    std::cout << "\n[gelu_tanh]\n";
+    print_vector(a->data, "a", 1, 2);
+    print_vector(c->data, "gelu(a, tanh)", 1, 2);
+
+    std::string err;
+    if (!expect_vector_close(c->data, {0.0, 0.8411919906082768}, "gelu tanh data", err, 1e-5)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+
+    c->backward();
+    print_vector(a->grad, "grad a", 1, 2);
+    if (!expect_vector_close(a->grad, {0.5, 1.0829640838457826}, "gelu tanh grad", err, 1e-5)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+    return true;
+}
+
+bool test_sigmoid_activation() {
+    auto a = make_tensor(1, 2, {0.0, 1.0});
+    auto c = sigmoid(a);
+
+    std::cout << "\n[sigmoid]\n";
+    print_vector(a->data, "a", 1, 2);
+    print_vector(c->data, "sigmoid(a)", 1, 2);
+
+    std::string err;
+    if (!expect_vector_close(c->data, {0.5, 0.7310585786300049}, "sigmoid data", err, 1e-6)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+
+    c->backward();
+    print_vector(a->grad, "grad a", 1, 2);
+    if (!expect_vector_close(a->grad, {0.25, 0.19661193324148185}, "sigmoid grad", err, 1e-6)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+    return true;
+}
+
+bool test_tanh_activation() {
+    auto a = make_tensor(1, 2, {0.0, 0.5});
+    auto c = tanh(a);
+
+    std::cout << "\n[tanh]\n";
+    print_vector(a->data, "a", 1, 2);
+    print_vector(c->data, "tanh(a)", 1, 2);
+
+    std::string err;
+    if (!expect_vector_close(c->data, {0.0, 0.46211715726000974}, "tanh data", err, 1e-6)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+
+    c->backward();
+    print_vector(a->grad, "grad a", 1, 2);
+    if (!expect_vector_close(a->grad, {1.0, 0.7864477329659274}, "tanh grad", err, 1e-6)) {
+        std::cerr << err << "\n";
+        return false;
+    }
+    return true;
+}
+
 bool test_scalar_ops() {
     auto a = make_tensor(1, 2, {2, 4});
     auto c = tensor_mul_scalar(a, 3.0);
@@ -302,6 +465,13 @@ int main() {
         {"hadamard_div", test_hadamard_div},
         {"negate", test_negate},
         {"exp_log_chain", test_exp_log_chain},
+        {"relu", test_relu_activation},
+        {"leaky_relu", test_leaky_relu_activation},
+        {"silu", test_silu_activation},
+        {"gelu_exact", test_gelu_exact_activation},
+        {"gelu_tanh", test_gelu_tanh_activation},
+        {"sigmoid", test_sigmoid_activation},
+        {"tanh", test_tanh_activation},
         {"scalar_ops", test_scalar_ops},
         {"transpose", test_transpose},
         {"matmul", test_matmul},

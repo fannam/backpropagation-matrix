@@ -5,6 +5,7 @@ LDFLAGS :=
 SRC := \
 	src/main.cpp \
 	src/core/Tensor.cpp \
+	src/activations/Activations.cpp \
 	src/operators/BinaryOps.cpp \
 	src/operators/UnaryOps.cpp \
 	src/operators/MatrixOps.cpp
