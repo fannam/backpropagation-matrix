@@ -30,7 +30,7 @@ void Tensor::backward() {
 
     std::function<void(std::shared_ptr<Tensor>)> build_topo = [&](std::shared_ptr<Tensor> v){
         if(visited[v]==1){
-            throw("Phát hiện chu trình trên đồ thị tính toán");
+            throw(std::runtime_error("Phát hiện chu trình trên đồ thị tính toán"));
         }
         if(visited[v]==2) return;
 
