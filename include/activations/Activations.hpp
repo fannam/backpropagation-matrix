@@ -18,6 +18,6 @@ std::shared_ptr<Tensor> sigmoid(std::shared_ptr<Tensor> a);
 
 std::shared_ptr<Tensor> tanh(std::shared_ptr<Tensor> a);
 
-std::shared_ptr<Tensor> softmax(std::shared_ptr<Tensor> a);
+std::shared_ptr<Tensor> log_softmax(std::shared_ptr<Tensor> a);
 
 #endif 
