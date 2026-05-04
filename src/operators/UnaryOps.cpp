@@ -38,6 +38,9 @@ std::shared_ptr<Tensor> log_op(std::shared_ptr<Tensor> a) {
     auto out = Tensor::create(a->rows, a->cols, {a}, "ln");
 
     for(size_t i = 0; i < a->data.size(); ++i) {
+        if(a->data[i] <= 0.0) {
+            throw std::runtime_error("log input must be positive");
+        }
         out->data[i] = std::log(a->data[i]);
     }
 
@@ -54,6 +57,9 @@ std::shared_ptr<Tensor> scalar_div_tensor(double scalar, std::shared_ptr<Tensor>
     auto out = Tensor::create(a->rows, a->cols, {a}, "scl_div_tensor");
 
     for(size_t i = 0; i < a->data.size(); ++i) {
+        if(a->data[i] == 0.0) {
+            throw std::runtime_error("Loi chia cho 0!");
+        }
         out->data[i] = scalar/a->data[i];
     }
 

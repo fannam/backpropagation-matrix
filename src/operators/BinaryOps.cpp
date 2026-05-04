@@ -47,6 +47,11 @@ std::shared_ptr<Tensor> hadamard_div (std::shared_ptr<Tensor> a, std::shared_ptr
     if(a->rows != b->rows || a->cols != b->cols) {
         throw(std::runtime_error("Kích thước hai ma trận không khớp"));
     }
+    for(double b_val : b->data) {
+        if(b_val == 0.0) {
+            throw(std::runtime_error("Loi chia cho 0!"));
+        }
+    }
     auto out = Tensor::create(a->rows, a->cols, {a, b}, "h_div");
 
     for(size_t i = 0; i < a->data.size(); ++i) {
