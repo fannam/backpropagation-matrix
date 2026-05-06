@@ -102,5 +102,6 @@ inline void print_vector(const std::vector<double>& v,
 std::vector<TestCase> operator_tests();
 std::vector<TestCase> activation_tests();
 std::vector<TestCase> tensor_tests();
+std::vector<TestCase> init_tests();
 
 #endif

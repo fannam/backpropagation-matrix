@@ -17,6 +17,7 @@ int main() {
     append_tests(tests, tensor_tests());
     append_tests(tests, operator_tests());
     append_tests(tests, activation_tests());
+    append_tests(tests, init_tests());
 
     int passed = 0;
     int total = static_cast<int>(tests.size());
