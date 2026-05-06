@@ -9,7 +9,13 @@ LIB_SRC := \
 	src/operators/UnaryOps.cpp \
 	src/operators/MatrixOps.cpp \
 	src/operators/ReductionOps.cpp \
-	src/loss/Loss.cpp
+	src/loss/Loss.cpp \
+	src/nn/Linear.cpp \
+	src/nn/Init.cpp \
+	src/nn/Conv2d.cpp \
+	src/nn/MaxPool2d.cpp \
+	src/nn/AvgPool2d.cpp \
+	src/optim/SGD.cpp
 
 TEST_SRC := \
 	tests/main.cpp \
