@@ -7,7 +7,9 @@ LIB_SRC := \
 	src/activations/Activations.cpp \
 	src/operators/BinaryOps.cpp \
 	src/operators/UnaryOps.cpp \
-	src/operators/MatrixOps.cpp
+	src/operators/MatrixOps.cpp \
+	src/operators/ReductionOps.cpp \
+	src/loss/Loss.cpp
 
 TEST_SRC := \
 	tests/main.cpp \
