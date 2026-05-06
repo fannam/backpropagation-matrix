@@ -11,10 +11,10 @@ std::shared_ptr<Tensor> sum(std::shared_ptr<Tensor> a) {
 
     //f(x) = x1+x2+...+x_n
     //∂L/∂x_i = ∂L/∂f.∂f/∂x_i = ∂L/∂x_i 
-    out->_backward = [a, out](){
-        double imcoming_grad = out->grad[0];
+    out->_backward = [a](Tensor* out){
+        double incoming_grad = out->grad[0];
         for(size_t i=0; i < a->grad.size(); ++i){
-            a->grad[i] += imcoming_grad;
+            a->grad[i] += incoming_grad;
         }
     };
     return out;
@@ -28,7 +28,7 @@ std::shared_ptr<Tensor> mean(std::shared_ptr<Tensor> a) {
 
     //f(x) = (x1+x2+...+x_n)/n
     //∂L/∂x_i = ∂L/∂f.∂f/∂x_i = ∂L/∂x_i * 1/n
-    out->_backward = [a, out](){
+    out->_backward = [a](Tensor* out){
         double grad_per_elem = out->grad[0] / a->grad.size();
         for(size_t i = 0; i < a->grad.size(); ++i){
             a->grad[i] += grad_per_elem;
@@ -55,7 +55,7 @@ std::shared_ptr<Tensor> max(std::shared_ptr<Tensor> a) {
 
     //f(x) = max(x1,...,x_n)
     //∂L/∂x_i = ∂L/∂f / count nếu x_i = max, else 0
-    out->_backward = [a, out, max_indices](){
+    out->_backward = [a, max_indices](Tensor* out){
         double share = out->grad[0] / max_indices.size();
         for(size_t idx : max_indices){
             a->grad[idx] += share;
@@ -67,7 +67,7 @@ std::shared_ptr<Tensor> max(std::shared_ptr<Tensor> a) {
 std::shared_ptr<Tensor> min(std::shared_ptr<Tensor> a) {
     auto out = Tensor::create(1, 1, {a}, "min");
     double min_val = a->data[0];
-    std::vector<size_t> min_indices;
+    std::vector<size_t> min_indices = {0};
     for(size_t i = 1; i < a->data.size(); ++i){
         if(a->data[i] < min_val){
             min_val = a->data[i];
@@ -82,7 +82,7 @@ std::shared_ptr<Tensor> min(std::shared_ptr<Tensor> a) {
 
     //f(x) = max(x1,...,x_n)
     //∂L/∂x_i = ∂L/∂f / count nếu x_i = min, else 0
-    out->_backward = [a, out, min_indices](){
+    out->_backward = [a, min_indices](Tensor* out){
         double share = out->grad[0] / min_indices.size();
         for(size_t idx : min_indices){
             a->grad[idx] += share;
@@ -129,7 +129,7 @@ std::shared_ptr<Tensor> variance(std::shared_ptr<Tensor> a) {
 
     //f(x) = 1/n * sum_{i=1}^{n} (x_i - mean)^2
     //∂L/∂x_i = ∂L/∂f . 2/n . (x_i - mean)
-    out->_backward = [a, out, mean](){
+    out->_backward = [a, mean](Tensor* out){
         size_t n = a->data.size();
         double scale = (2.0 / n) * out->grad[0];
         for(size_t i = 0; i < a->grad.size(); ++i){
@@ -155,7 +155,7 @@ std::shared_ptr<Tensor> std_op(std::shared_ptr<Tensor> a) {
 
     //σ = sqrt(variance)
     //∂σ/∂x_i = ∂L/∂σ . (x_i - mean) / (n * σ)
-    out->_backward = [a, out, mean, sigma](){
+    out->_backward = [a, mean, sigma](Tensor* out){
         if(sigma == 0.0){
             throw std::runtime_error("std_op backward: sigma = 0, gradient undefined");
         }
@@ -180,7 +180,7 @@ std::shared_ptr<Tensor> sum_rows(std::shared_ptr<Tensor> a) {
 
     //y_i = x_i1 + x_i2 + ... + x_in
     //∂L/∂x_ij = ∂L/∂y_i.∂y_i/∂x_ij = ∂L/∂y_i 
-    out->_backward = [a, out](){
+    out->_backward = [a](Tensor* out){
         for(size_t i = 0; i < a->rows; ++i){
             double g = out->grad[i];
             for(size_t j = 0; j < a->cols; ++j){
@@ -204,7 +204,7 @@ std::shared_ptr<Tensor> mean_rows(std::shared_ptr<Tensor> a) {
 
     //y_i = (x_i1 + x_i2 + ... + x_in) / cols
     //∂L/∂x_ij = ∂L/∂y_i / cols
-    out->_backward = [a, out](){
+    out->_backward = [a](Tensor* out){
         int cols = a->cols;
         for(size_t i = 0; i < a->rows; ++i){
             double g_per_elem = out->grad[i] / cols;

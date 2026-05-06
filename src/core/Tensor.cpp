@@ -84,11 +84,14 @@ void Tensor::backward() {
     };
 
     build_topo(shared_from_this());
+    // Seed grad = 1.0 cho mỗi element. Tương đương gradient của sum(output) w.r.t. mỗi input.
+    // Non-scalar output: caller phải hiểu đây là implicit loss = sum(output).
+    // Cần seed khác → dùng backward(seed_grad).
     std::fill(this->grad.begin(), this->grad.end(), 1.0);
 
     for(auto itr = topo.rbegin(); itr != topo.rend(); ++itr) {
         if((*itr)->_backward){
-            (*itr)->_backward();
+            (*itr)->_backward((*itr).get());
         }
     }
 }
@@ -122,7 +125,7 @@ void Tensor::backward(const std::vector<double>& seed_grad){
 
     for(auto itr = topo.rbegin(); itr != topo.rend(); ++itr) {
         if((*itr)->_backward){
-            (*itr)->_backward();
+            (*itr)->_backward((*itr).get());
         }
     }
 }

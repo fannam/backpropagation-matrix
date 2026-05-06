@@ -13,7 +13,7 @@ std::shared_ptr<Tensor> add (std::shared_ptr<Tensor> a, std::shared_ptr<Tensor> 
         out->data[i] = a->data[i] + b->data[i];
     }
 
-    out->_backward = [a, b, out]() {
+    out->_backward = [a, b](Tensor* out) {
         for(size_t i = 0; i < a->data.size(); ++i) {
             a->grad[i] += out->grad[i];
             b->grad[i] += out->grad[i];
@@ -33,7 +33,7 @@ std::shared_ptr<Tensor> hadamard_mul (std::shared_ptr<Tensor> a, std::shared_ptr
         out->data[i] = a->data[i] * b->data[i];
     }
 
-    out->_backward = [a, b, out]() {
+    out->_backward = [a, b](Tensor* out) {
         for(size_t i = 0; i < a->data.size(); ++i) {
             a->grad[i] += b->data[i] * out->grad[i];
             b->grad[i] += a->data[i] * out->grad[i];
@@ -58,11 +58,11 @@ std::shared_ptr<Tensor> hadamard_div (std::shared_ptr<Tensor> a, std::shared_ptr
         out->data[i] = a->data[i] / b->data[i];
     }
 
-    out->_backward = [a, b, out]() {
+    out->_backward = [a, b](Tensor* out) {
         for(size_t i = 0; i < a->data.size(); ++i) {
             double b_val = b->data[i];
             a->grad[i] += (1.0/b_val) * out->grad[i];
-            b->grad[i] -= (a->data[i] / (b_val * b_val)) * out->grad[i]; 
+            b->grad[i] -= (a->data[i] / (b_val * b_val)) * out->grad[i];
         }
     };
 

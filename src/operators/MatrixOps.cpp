@@ -17,7 +17,7 @@ std::shared_ptr<Tensor> transpose(std::shared_ptr<Tensor> a) {
         }
     }
 
-    out->_backward = [a, out]() {
+    out->_backward = [a](Tensor* out) {
         for(size_t i = 0; i < static_cast<size_t>(a->rows); ++i){
             for(size_t j = 0; j < static_cast<size_t>(a->cols); ++j){
                 a->grad_at(i, j) += out->grad_at(j, i);
@@ -59,7 +59,7 @@ std::shared_ptr<Tensor> matmul(std::shared_ptr<Tensor> a, std::shared_ptr<Tensor
     // ∂L/∂b_{k,j} = sum_{i=1}^{m} ∂L/∂c_{i,j} . ∂c_{i,j}/∂b_{k,j}
     // ∂L/∂b_{k,j} = sum_{i=1}^{m} ∂L/∂c_{i,j} . a_{i,k}
 
-    out->_backward = [a, b, out, ms, ns, ps]() {
+    out->_backward = [a, b, ms, ns, ps](Tensor* out) {
         for(size_t i = 0; i < ms; ++i){
             for(size_t j = 0; j < ps; ++j){
                 double grad_val = out->grad_at(i, j);

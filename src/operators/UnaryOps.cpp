@@ -9,7 +9,7 @@ std::shared_ptr<Tensor> negate(std::shared_ptr<Tensor> a) {
         out->data[i] = -a->data[i];
     }
 
-    out->_backward = [a, out]() {
+    out->_backward = [a](Tensor* out) {
         for(size_t i = 0; i < a->grad.size(); ++i) {
             a->grad[i] -= out->grad[i];
         }
@@ -25,7 +25,7 @@ std::shared_ptr<Tensor> exp_op(std::shared_ptr<Tensor> a) {
         out->data[i] = std::exp(a->data[i]);
     }
 
-    out->_backward = [a, out]() {
+    out->_backward = [a](Tensor* out) {
         for(size_t i = 0; i < a->grad.size(); ++i) {
             a->grad[i] += out->data[i] * out->grad[i];
         }
@@ -44,7 +44,7 @@ std::shared_ptr<Tensor> log_op(std::shared_ptr<Tensor> a) {
         out->data[i] = std::log(a->data[i]);
     }
 
-    out->_backward = [a, out]() {
+    out->_backward = [a](Tensor* out) {
         for(size_t i = 0; i < a->data.size(); ++i) {
             a->grad[i] += (1.0/a->data[i]) * out->grad[i];
         }
@@ -63,7 +63,7 @@ std::shared_ptr<Tensor> scalar_div_tensor(double scalar, std::shared_ptr<Tensor>
         out->data[i] = scalar/a->data[i];
     }
 
-    out->_backward = [a, scalar, out]() {
+    out->_backward = [a, scalar](Tensor* out) {
         for(size_t i = 0; i < a->data.size(); i++) {
             double a_val = a->data[i];
             a->grad[i] -= (scalar / (a_val * a_val)) * out->grad[i];
@@ -84,7 +84,7 @@ std::shared_ptr<Tensor> tensor_add_scalar(std::shared_ptr<Tensor> a, double scal
         out->data[i] = a->data[i] + scalar;
     }
 
-    out->_backward = [a, out]() {
+    out->_backward = [a](Tensor* out) {
         for(size_t i = 0; i < a->data.size(); ++i) {
             a->grad[i] += out->grad[i];
         }
@@ -99,7 +99,7 @@ std::shared_ptr<Tensor> tensor_mul_scalar(std::shared_ptr<Tensor> a, double scal
         out->data[i] = a->data[i] * scalar;
     }
 
-    out->_backward = [a, scalar, out] {
+    out->_backward = [a, scalar](Tensor* out) {
         for(size_t i = 0; i < a->data.size(); ++i) {
             a->grad[i] += scalar * out->grad[i];
         }

@@ -13,34 +13,34 @@ std::shared_ptr<Tensor> relu(std::shared_ptr<Tensor> a){
     auto out = Tensor::create(a->rows, a->cols, {a}, "relu");
 
     for(size_t i = 0; i < a->data.size(); ++i){
-        float a_val = a->data[i];
+        double a_val = a->data[i];
         out->data[i] = (a_val > 0) ? a_val : 0;
     }
 
-    out->_backward = [a, out](){
+    out->_backward = [a](Tensor* out){
         for(size_t i = 0; i < a->grad.size(); ++i){
-            float a_val = a->data[i];
-            a->grad[i] += (a_val > 0) ? out->grad[i] : 0;
+            double a_val = a->data[i];
+            a->grad[i] += (a_val > 0) ? out->grad[i] : 0.0;
         }
     };
 
     return out;
 }
 
-std::shared_ptr<Tensor> leaky_relu(std::shared_ptr<Tensor> a, float alpha){
+std::shared_ptr<Tensor> leaky_relu(std::shared_ptr<Tensor> a, double alpha){
     //leaky_relu: f(x) = x if x > 0, alpha*x otherwise
-    //derivative: f'(x) = 1 if x > 0, alpha otherwwise
+    //derivative: f'(x) = 1 if x > 0, alpha otherwise
 
     auto out = Tensor::create(a->rows, a->cols, {a}, "leaky_relu");
 
     for(size_t i = 0; i < a->data.size(); ++i){
-        float a_val = a->data[i];
+        double a_val = a->data[i];
         out->data[i] = (a_val > 0) ? a_val : alpha * a_val;
     }
 
-    out->_backward = [a, alpha, out](){
+    out->_backward = [a, alpha](Tensor* out){
         for(size_t i = 0; i < a->grad.size(); ++i){
-            float out_grad = out->grad[i];
+            double out_grad = out->grad[i];
             a->grad[i] += (a->data[i] > 0) ? out_grad : out_grad * alpha;
         }
     };
@@ -55,15 +55,15 @@ std::shared_ptr<Tensor> silu(std::shared_ptr<Tensor> a){
     auto out = Tensor::create(a->rows, a->cols, {a}, "silu");
 
     for(size_t i = 0; i < a->data.size(); ++i){
-        float a_val = a->data[i];
-        out->data[i] = a_val * 1.0 / (1 + exp(-a_val));
+        double a_val = a->data[i];
+        out->data[i] = a_val / (1.0 + std::exp(-a_val));
     }
 
-    out->_backward = [a, out](){
+    out->_backward = [a](Tensor* out){
         for(size_t i = 0; i < a->grad.size(); ++i){
-            float a_val = a->data[i];
-            float sig_val = 1.0 / (1 + exp(-a_val));
-            float derive = sig_val + a_val * sig_val * (1 - sig_val);
+            double a_val = a->data[i];
+            double sig_val = 1.0 / (1.0 + std::exp(-a_val));
+            double derive = sig_val + a_val * sig_val * (1.0 - sig_val);
             a->grad[i] += derive * out->grad[i];
         }
     };
@@ -81,10 +81,10 @@ std::shared_ptr<Tensor> tanh(std::shared_ptr<Tensor> a){
         out->data[i] = std::tanh(a->data[i]);
     }
 
-    out->_backward = [a, out](){
+    out->_backward = [a](Tensor* out){
         for(size_t i = 0; i < a->grad.size(); ++i){
-            float tanh_val = std::tanh(a->data[i]);
-            a->grad[i] += out->grad[i] * (1 - tanh_val * tanh_val);
+            double tanh_val = std::tanh(a->data[i]);
+            a->grad[i] += out->grad[i] * (1.0 - tanh_val * tanh_val);
         }
     };
 
@@ -105,12 +105,12 @@ std::shared_ptr<Tensor> gelu_exact(std::shared_ptr<Tensor> a){
         out->data[i] = 0.5 * a_val * (1 + std::erf(a_val / sqrt2));
     }
 
-    out->_backward = [a, out, sqrt2, sqrt2pi](){
+    out->_backward = [a, sqrt2, sqrt2pi](Tensor* out){
         for(size_t i = 0; i < a->grad.size(); ++i){
             double a_val = a->data[i];
             double derive = 0.5 * (1 + std::erf(a_val / sqrt2)) +
                             a_val / sqrt2pi * std::exp(-a_val * a_val / 2);
-            a->grad[i] += out->grad[i] * derive; 
+            a->grad[i] += out->grad[i] * derive;
         }
     };
 
@@ -129,8 +129,7 @@ std::shared_ptr<Tensor> gelu_tanh(std::shared_ptr<Tensor> a){
         double u = sqrt2topi * (a_val + 0.044715 * a_val * a_val * a_val);
         out->data[i] = 0.5 * a_val * (1 + std::tanh(u));
     }
-    out->_backward = [a, out, sqrt2topi](){
-        
+    out->_backward = [a, sqrt2topi](Tensor* out){
         for(size_t i = 0; i < a->grad.size(); ++i){
             double a_val = a->data[i];
             double u = std::tanh(sqrt2topi * (a_val + 0.044715 * a_val * a_val * a_val));
@@ -163,13 +162,13 @@ std::shared_ptr<Tensor> sigmoid(std::shared_ptr<Tensor> a){
     auto out = Tensor::create(a->rows, a->cols, {a}, "sigmoid");
 
     for(size_t i = 0; i < a->data.size(); ++i){
-        out->data[i] = 1.0 / (1 + exp(-a->data[i]));
+        out->data[i] = 1.0 / (1.0 + std::exp(-a->data[i]));
     }
 
-    out->_backward = [a, out](){
+    out->_backward = [a](Tensor* out){
         for(size_t i = 0; i < a->data.size(); ++i){
-            float sig_val = 1.0 / (1 + exp(-a->data[i]));
-            a->grad[i] += out->grad[i] * sig_val * (1 - sig_val);
+            double sig_val = 1.0 / (1.0 + std::exp(-a->data[i]));
+            a->grad[i] += out->grad[i] * sig_val * (1.0 - sig_val);
         }
     };
 
@@ -201,7 +200,7 @@ std::shared_ptr<Tensor> log_softmax(std::shared_ptr<Tensor> a){
             out->data[i] = a->data[i] - max_val - log_sum_exp;
         }
 
-        out->_backward = [a, out](){
+        out->_backward = [a](Tensor* out){
             double sum_grad = 0.0;
             for(double g : out->grad){
                 sum_grad += g;
@@ -231,7 +230,7 @@ std::shared_ptr<Tensor> log_softmax(std::shared_ptr<Tensor> a){
             }
         }
 
-        out->_backward = [a, out, rows, cols](){
+        out->_backward = [a, rows, cols](Tensor* out){
             for(size_t r = 0; r < rows; ++r){
                 double sum_grad = 0.0;
                 for(size_t c = 0; c < cols; ++c){

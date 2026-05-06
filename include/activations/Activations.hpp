@@ -8,7 +8,7 @@
 
 std::shared_ptr<Tensor> relu(std::shared_ptr<Tensor> a);
 
-std::shared_ptr<Tensor> leaky_relu(std::shared_ptr<Tensor> a, float alpha);
+std::shared_ptr<Tensor> leaky_relu(std::shared_ptr<Tensor> a, double alpha);
 
 std::shared_ptr<Tensor> silu(std::shared_ptr<Tensor> a);
 

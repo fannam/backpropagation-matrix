@@ -15,7 +15,7 @@ public:
     std::string label;
 
     std::vector<std::shared_ptr<Tensor>>prev;
-    std::function<void()> _backward;
+    std::function<void(Tensor*)> _backward;
     
     //Constructor
     Tensor(int r, int c, std::vector<std::shared_ptr<Tensor>> parents = {}, std::string lbl="");
