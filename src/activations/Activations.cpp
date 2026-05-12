@@ -182,8 +182,8 @@ std::shared_ptr<Tensor> log_softmax(std::shared_ptr<Tensor> a){
     //derivative (vector): dL/dx_i = dL/dy_i - softmax_i * sum_j dL/dy_j
     auto out = Tensor::create(a->rows, a->cols, {a}, "log_softmax");
 
-    const size_t rows = static_cast<size_t>(a->rows);
-    const size_t cols = static_cast<size_t>(a->cols);
+    const int rows = a->rows;
+    const int cols = a->cols;
 
     if(a->rows == 1 || a->cols == 1){
         // treat as a single vector
@@ -213,33 +213,31 @@ std::shared_ptr<Tensor> log_softmax(std::shared_ptr<Tensor> a){
     } 
     else {
         // apply log_softmax along each row
-        for(size_t r = 0; r < rows; ++r){
-            double max_val = a->at(static_cast<int>(r), 0);
-            for(size_t c = 1; c < cols; ++c){
-                double v = a->at(static_cast<int>(r), static_cast<int>(c));
+        for(int r = 0; r < rows; ++r){
+            double max_val = a->at(r, 0);
+            for(int c = 1; c < cols; ++c){
+                double v = a->at(r, c);
                 if(v > max_val) max_val = v;
             }
             double sum_exp = 0.0;
-            for(size_t c = 0; c < cols; ++c){
-                sum_exp += std::exp(a->at(static_cast<int>(r), static_cast<int>(c)) - max_val);
+            for(int c = 0; c < cols; ++c){
+                sum_exp += std::exp(a->at(r, c) - max_val);
             }
             double log_sum_exp = std::log(sum_exp);
-            for(size_t c = 0; c < cols; ++c){
-                out->at(static_cast<int>(r), static_cast<int>(c)) =
-                    a->at(static_cast<int>(r), static_cast<int>(c)) - max_val - log_sum_exp;
+            for(int c = 0; c < cols; ++c){
+                out->at(r, c) = a->at(r, c) - max_val - log_sum_exp;
             }
         }
 
         out->_backward = [a, rows, cols](Tensor* out){
-            for(size_t r = 0; r < rows; ++r){
+            for(int r = 0; r < rows; ++r){
                 double sum_grad = 0.0;
-                for(size_t c = 0; c < cols; ++c){
-                    sum_grad += out->grad_at(static_cast<int>(r), static_cast<int>(c));
+                for(int c = 0; c < cols; ++c){
+                    sum_grad += out->grad_at(r, c);
                 }
-                for(size_t c = 0; c < cols; ++c){
-                    double softmax_i = std::exp(out->at(static_cast<int>(r), static_cast<int>(c)));
-                    a->grad_at(static_cast<int>(r), static_cast<int>(c)) +=
-                        out->grad_at(static_cast<int>(r), static_cast<int>(c)) - softmax_i * sum_grad;
+                for(int c = 0; c < cols; ++c){
+                    double softmax_i = std::exp(out->at(r, c));
+                    a->grad_at(r, c) += out->grad_at(r, c) - softmax_i * sum_grad;
                 }
             }
         };

@@ -170,9 +170,9 @@ std::shared_ptr<Tensor> std_op(std::shared_ptr<Tensor> a) {
 
 std::shared_ptr<Tensor> sum_rows(std::shared_ptr<Tensor> a) {
     auto out = Tensor::create(a->rows, 1, {a}, "sum_rows");
-    for(size_t i = 0; i < a->rows; ++i){
+    for(int i = 0; i < a->rows; ++i){
         double row_sum = 0;
-        for(size_t j = 0; j < a->cols; ++j){
+        for(int j = 0; j < a->cols; ++j){
             row_sum += a->at(i, j);
         }
         out->data[i] = row_sum;
@@ -181,9 +181,9 @@ std::shared_ptr<Tensor> sum_rows(std::shared_ptr<Tensor> a) {
     //y_i = x_i1 + x_i2 + ... + x_in
     //∂L/∂x_ij = ∂L/∂y_i.∂y_i/∂x_ij = ∂L/∂y_i 
     out->_backward = [a](Tensor* out){
-        for(size_t i = 0; i < a->rows; ++i){
+        for(int i = 0; i < a->rows; ++i){
             double g = out->grad[i];
-            for(size_t j = 0; j < a->cols; ++j){
+            for(int j = 0; j < a->cols; ++j){
                 a->grad_at(i, j) += g;
             }
         }
@@ -194,9 +194,9 @@ std::shared_ptr<Tensor> sum_rows(std::shared_ptr<Tensor> a) {
 std::shared_ptr<Tensor> mean_rows(std::shared_ptr<Tensor> a) {
     auto out = Tensor::create(a->rows, 1, {a}, "mean_rows");
     int cols = a->cols;
-    for(size_t i = 0; i < a->rows; ++i){
+    for(int i = 0; i < a->rows; ++i){
         double row_sum = 0;
-        for(size_t j = 0; j < a->cols; ++j){
+        for(int j = 0; j < a->cols; ++j){
             row_sum += a->at(i, j);
         }
         out->data[i] = row_sum / cols;
@@ -206,9 +206,9 @@ std::shared_ptr<Tensor> mean_rows(std::shared_ptr<Tensor> a) {
     //∂L/∂x_ij = ∂L/∂y_i / cols
     out->_backward = [a](Tensor* out){
         int cols = a->cols;
-        for(size_t i = 0; i < a->rows; ++i){
+        for(int i = 0; i < a->rows; ++i){
             double g_per_elem = out->grad[i] / cols;
-            for(size_t j = 0; j < a->cols; ++j){
+            for(int j = 0; j < a->cols; ++j){
                 a->grad_at(i, j) += g_per_elem;
             }
         }

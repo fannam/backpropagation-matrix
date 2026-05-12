@@ -159,7 +159,7 @@ std::shared_ptr<Tensor> cross_entropy(std::shared_ptr<Tensor> logits, const std:
     auto out = Tensor::create(1, 1, {logits}, "cross_entropy");
 
     // Lưu lại softmax để dùng trong backward (tiết kiệm việc tính lại)
-    std::vector<double> softmax(static_cast<size_t>(N) * static_cast<size_t>(C));
+    std::vector<double> softmax(N * C);
     double total_loss = 0.0;
 
     // Forward: duyệt từng sample (mỗi row của batch)
@@ -176,7 +176,7 @@ std::shared_ptr<Tensor> cross_entropy(std::shared_ptr<Tensor> logits, const std:
         for(int j = 0; j < C; ++j){
             double v = is_1d ? logits->data[j] : logits->at(i, j);
             double e = std::exp(v - max_val);
-            softmax[static_cast<size_t>(i) * C + j] = e;
+            softmax[i * C + j] = e;
             sum_exp += e;
         }
 
@@ -185,7 +185,7 @@ std::shared_ptr<Tensor> cross_entropy(std::shared_ptr<Tensor> logits, const std:
         double log_sum_exp = std::log(sum_exp);
         double inv_sum_exp = 1.0 / sum_exp;
         for(int j = 0; j < C; ++j){
-            softmax[static_cast<size_t>(i) * C + j] *= inv_sum_exp;
+            softmax[i * C + j] *= inv_sum_exp;
         }
 
         // Bước 4: cộng dồn loss của sample i: -(logits[i, t_i] - max - log_sum_exp)
@@ -201,7 +201,7 @@ std::shared_ptr<Tensor> cross_entropy(std::shared_ptr<Tensor> logits, const std:
         double scale = out->grad[0] / static_cast<double>(N);
         for(int i = 0; i < N; ++i){
             for(int j = 0; j < C; ++j){
-                double s = softmax[static_cast<size_t>(i) * C + j];
+                double s = softmax[i * C + j];
                 // indicator = 1 nếu j là class đúng của sample i, ngược lại = 0
                 double indicator = (j == targets[i]) ? 1.0 : 0.0;
                 double g = scale * (s - indicator);
