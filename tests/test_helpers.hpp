@@ -103,5 +103,6 @@ std::vector<TestCase> operator_tests();
 std::vector<TestCase> activation_tests();
 std::vector<TestCase> tensor_tests();
 std::vector<TestCase> init_tests();
+std::vector<TestCase> avg_pool_tests();
 
 #endif

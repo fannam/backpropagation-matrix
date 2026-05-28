@@ -18,6 +18,7 @@ int main() {
     append_tests(tests, operator_tests());
     append_tests(tests, activation_tests());
     append_tests(tests, init_tests());
+    append_tests(tests, avg_pool_tests());
 
     int passed = 0;
     int total = static_cast<int>(tests.size());

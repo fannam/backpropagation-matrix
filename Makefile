@@ -22,7 +22,8 @@ TEST_SRC := \
 	tests/test_tensor.cpp \
 	tests/test_ops.cpp \
 	tests/test_activations.cpp \
-	tests/test_init.cpp
+	tests/test_init.cpp \
+	tests/test_avgpool2d.cpp
 
 SRC := $(LIB_SRC) $(TEST_SRC)
 OBJ := $(SRC:.cpp=.o)
